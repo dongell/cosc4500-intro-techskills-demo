@@ -13,8 +13,8 @@
         HEIGHT = 500 - MARGIN.top - MARGIN.bottom;
 
       // remove previous table and graph
-      d3.select('#arrayStats').selectAll('table').remove();
-      d3.select('#scatterPlot').selectAll('svg').remove();
+      d3.select('#stats').selectAll('table').remove();
+      d3.select('#graph').selectAll('svg').remove();
 
 
       //#1 - Create 2 arrays of random, count data within the domain (1-10). Sample size of each array should be 10.
@@ -57,7 +57,7 @@
       ];
 
       // create new table
-      var table = d3.select('#arrayStats').append('table');
+      var table = d3.select('#stats').append('table');
       var thead = table.append('thead');
       var tbody = table.append('tbody');
 
@@ -111,11 +111,12 @@
 
       //#4 - Build a svg-based scatterplot based on the random, count data generated in [1].
       //#5 - If I hover over any data point in said scatterplot, I should be able to see both data points i.e. 2,3 or 5,7 etc.
-      var div = d3.select('#scatterPlot').append('div')
+      var div = d3.select('#graph').append('div')
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
-      var canvas = d3.select('#scatterPlot')
+      // base svg
+      var canvas = d3.select('#graph')
         .append('svg')
         .attr('width', WIDTH + MARGIN.left + MARGIN.right)
         .attr('height', HEIGHT  + MARGIN.top + MARGIN.bottom)
@@ -124,35 +125,35 @@
         .attr("transform",
           "translate(" + MARGIN.left + "," + MARGIN.top + ")");
 
-      // add x-axis
+      // x-axis
       canvas.append("g")
         .attr("transform", "translate(0," + HEIGHT + ")")
         .attr('class', 'axis')
         .call(d3.axisBottom(xScale));
 
-      // text label for the x axis
+      // x-axis label
       canvas.append("text")
         .attr("transform",
           "translate(" + (WIDTH/2) + " ," +
           (HEIGHT + MARGIN.top + 20) + ")")
         .style("text-anchor", "middle")
-        .text("Random X values (1-10)");
+        .text("Random X Values");
 
-      // add y-axis
+      // y-axis
       canvas.append("g")
         .attr('class', 'axis')
         .call(d3.axisLeft(yScale));
 
-      // add y-axis label
+      // y-axis label
       canvas.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", 0 - MARGIN.left)
         .attr("x",0 - (HEIGHT / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Random Y values (1-10)");
+        .text("Random Y Values");
 
-      // add y-axis grid lines
+      // y-axis grid lines
       canvas.append("g")
         .attr("class", "grid")
         .call(d3.axisLeft(yScale)
@@ -160,6 +161,7 @@
           .tickFormat("")
         )
 
+      // draw plot points
       canvas.selectAll('circle')
         .data(plotData)
         .enter()
@@ -249,9 +251,11 @@
   </script>
 
   <style type="text/css">
+    @import url('https://fonts.googleapis.com/css?family=Nunito');
     body {
-      font-family: 'Helvetica Neue', Helvetica;
-      padding: 20px;
+      font-family: 'Nunito', Arial, sans-serif;
+      padding: 0;
+      margin: 0;
     }
     table {
       border-collapse: collapse;
@@ -278,23 +282,19 @@
       font: 12px sans-serif;
       pointer-events: none;
     }
-    #upper {
-      margin:0;
+
+    #header {
+      background-color: #1D2F3F;
+      color: white;
+      vertical-align: center;
     }
-    #links {
-      float:left;
-      width:25%;
-      overflow:hidden;
+
+    #stats {
+      background-color: white;
     }
-    #arrayStats {
-      float:left;
-      width:75%;
-      overflow:hidden;
-      text-algin: right;
-    }
-    #arrayStats table {
-      margin-right: 0;
-      margin-left: auto;
+
+    #graph {
+      background-color: #F3F3F3;
     }
 
     .grid line {
@@ -302,7 +302,7 @@
       stroke-opacity: 0.7;
       stroke-dasharray: 1;
       shape-rendering: crispEdges;
-      
+
     }
 
     .grid path {
@@ -312,15 +312,18 @@
 
 </head>
 <body>
-<div id="upper" style="width: 960px;">
-  <div id="links">
+  <div id="header">
+    <h3>Random Scatterplot Generator</h3>
     <a href="#" onclick="main();">Refresh Data</a>
   </div>
-  <div id="arrayStats"></div>
-</div>
-<div id="scatterPlot"></div>
-<script>
-  main();
-</script>
+
+  <div id="stats"></div>
+
+  <div id="graph"></div>
+
+  <script>
+    main();
+  </script>
+
 </body>
 </html>
