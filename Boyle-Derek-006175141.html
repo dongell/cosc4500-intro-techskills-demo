@@ -32,11 +32,11 @@
       //#2 - Calculate mean, median, mode, standard deviation of each array and print them on the html with formatting.
       // set data
       var headers = [
-        {key: 'axis', label: 'Axis', width: '40'},
-        {key: 'mean', label: 'Mean', width: '60'},
-        {key: 'median', label: 'Median', width: '60'},
-        {key: 'mode', label: 'Mode', width: '130'},
-        {key: 'stddev', label: 'Std Dev', width: '90'}
+        {key: 'axis', label: 'AXIS', width: '40'},
+        {key: 'mean', label: 'MEAN', width: '60'},
+        {key: 'median', label: 'MEDIAN', width: '60'},
+        {key: 'mode', label: 'MODE', width: '130'},
+        {key: 'stddev', label: 'STD DEV', width: '90'}
       ];
       var colAlign = ['center', 'right', 'right', 'right', 'right'];
       var data = [
@@ -136,8 +136,9 @@
         .attr("transform",
           "translate(" + (WIDTH/2) + " ," +
           (HEIGHT + MARGIN.top + 20) + ")")
-        .style("text-anchor", "middle")
+        .attr("class", "axis-label")
         .text("Random X Values");
+        //.style("text-anchor", "middle")
 
       // y-axis
       canvas.append("g")
@@ -150,8 +151,10 @@
         .attr("y", 0 - MARGIN.left)
         .attr("x",0 - (HEIGHT / 2))
         .attr("dy", "1em")
-        .style("text-anchor", "middle")
+        .attr("class", "axis-label")
         .text("Random Y Values");
+        //.style("text-anchor", "middle")
+
 
       // y-axis grid lines
       canvas.append("g")
@@ -173,7 +176,9 @@
         .attr('cy', function (d) {
           return yScale(d[1]);
         })
-        .attr('fill','steelblue')
+        .attr('fill','#27BEC9')
+        .style("stroke-width", 4)
+        .style("stroke", "#85CEBB")
         .on("mouseover", function (d) {
           div.transition()
             .duration(200)
@@ -251,28 +256,74 @@
   </script>
 
   <style type="text/css">
-    @import url('https://fonts.googleapis.com/css?family=Nunito');
+    @import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
     body {
       font-family: 'Nunito', Arial, sans-serif;
       padding: 0;
       margin: 0;
     }
+
+    #header {
+      background-color: #1D2F3F;
+      color: white;
+      height: 75px;
+    }
+
+    #stats {
+      background-color: white;
+      padding: 10px 0 20px 50px;
+      text-align: left;
+    }
+
+    #graph {
+      background-color: #F3F3F3;
+      padding: 0 0 0 20px;
+
+    }
+
+    button {
+      background-color: #85CEBB;
+      border: none;
+      outline: none;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      border-radius: 8px
+    }
+
+
     table {
       border-collapse: collapse;
     }
+    tr {
+      border-bottom: 1px solid #ccc;
+    }
     th, td {
-      padding: 0.25rem;
-      border: 1px solid #ccc;
+      padding: 4px;
+      font-size: 14px;
     }
     th {
-      background-color: #c7d9e8;
+      color: #808080;
     }
     .canvas {
       margin-top: 25px;
     }
     .axis {
       color: #808080;
+      font-size: 12px;
     }
+    
+    .axis-label {
+      color: #808080;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-anchor: middle;
+    }
+    
     div.tooltip {
       position: absolute;
       text-align: center;
@@ -283,26 +334,11 @@
       pointer-events: none;
     }
 
-    #header {
-      background-color: #1D2F3F;
-      color: white;
-      vertical-align: center;
-    }
-
-    #stats {
-      background-color: white;
-    }
-
-    #graph {
-      background-color: #F3F3F3;
-    }
-
     .grid line {
       stroke: lightgrey;
       stroke-opacity: 0.7;
       stroke-dasharray: 1;
       shape-rendering: crispEdges;
-
     }
 
     .grid path {
@@ -312,9 +348,20 @@
 
 </head>
 <body>
-  <div id="header">
-    <h3>Random Scatterplot Generator</h3>
-    <a href="#" onclick="main();">Refresh Data</a>
+  <div id="header" style="padding: 0 40px;">
+    <div style="float: left; width: 50%;">
+      <h3 style="margin-top:0; margin-bottom: 0; padding: 20px; font-weight: 700; font-size: 24px; letter-spacing: 4px;">
+        Random Scatterplot Generator
+      </h3>
+    </div>
+    <div style="float: left; width: 50%; text-align: right;">
+      <button style="margin:18px 20px 0 0;" onclick="main();">
+        Refresh Data &#8635
+      </button>
+      <button style="margin:18px 100px 0 0;" onclick="location.href='https://dongell.github.io/cosc4500-intro-techskills-demo/Boyle-Derek-006175141.html';">
+        View in GitHub &#8663
+      </button>
+    </div>
   </div>
 
   <div id="stats"></div>
