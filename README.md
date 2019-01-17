@@ -1,6 +1,6 @@
 # cosc4500-intro-techskills-demo
 
-###Requirements
+### Requirements
 1. Using Javascript/D3, create 2 arrays of random, count data within the domain (1-10). Sample size of each array should be 10.
 2. Calculate mean, median, mode, standard deviation of each array and print them on the html with formatting.
 3. Use these 2 arrays to define a x-axis and y-axis.
@@ -16,5 +16,5 @@
 1. How much formatting is necessary?
 2. Should we use native JavaScript array functions as much as possible?
 3. Make sure to correctly sort values in the arrays.
-4. 
+4. How to render HTML on GitHub?
 
