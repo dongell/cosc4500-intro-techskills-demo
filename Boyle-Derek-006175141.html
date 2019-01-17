@@ -124,10 +124,12 @@
         .attr("transform",
           "translate(" + MARGIN.left + "," + MARGIN.top + ")");
 
-      // Add the X Axis
+      // add x-axis
       canvas.append("g")
         .attr("transform", "translate(0," + HEIGHT + ")")
+        .attr('class', 'axis')
         .call(d3.axisBottom(xScale));
+
       // text label for the x axis
       canvas.append("text")
         .attr("transform",
@@ -136,9 +138,12 @@
         .style("text-anchor", "middle")
         .text("Random X values (1-10)");
 
-      // Add the Y Axis
+      // add y-axis
       canvas.append("g")
+        .attr('class', 'axis')
         .call(d3.axisLeft(yScale));
+
+      // add y-axis label
       canvas.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", 0 - MARGIN.left)
@@ -147,6 +152,7 @@
         .style("text-anchor", "middle")
         .text("Random Y values (1-10)");
 
+      // add y-axis grid lines
       canvas.append("g")
         .attr("class", "grid")
         .call(d3.axisLeft(yScale)
@@ -254,9 +260,14 @@
       padding: 0.25rem;
       border: 1px solid #ccc;
     }
+    th {
+      background-color: #c7d9e8;
+    }
     .canvas {
-      border:  1px dotted #ccc;
       margin-top: 25px;
+    }
+    .axis {
+      color: #808080;
     }
     div.tooltip {
       position: absolute;
@@ -302,7 +313,7 @@
 </head>
 <body>
 <div id="upper" style="width: 960px;">
-  <div id="links" style="height: 50px;">
+  <div id="links">
     <a href="#" onclick="main();">Refresh Data</a>
   </div>
   <div id="arrayStats"></div>
