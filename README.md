@@ -16,5 +16,5 @@
 1. How much formatting is necessary?
 2. Should we use native JavaScript array functions as much as possible?
 3. Make sure to correctly sort values in the arrays.
-4. How to render HTML on GitHub?
+4. Which version of d3 should we target?
 
