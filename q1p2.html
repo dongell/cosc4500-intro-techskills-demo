@@ -2,32 +2,494 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>COSC 4500 Intro Demo</title>
+  <title>Global Suicides Interactive Tool (1985-2015)</title>
   <style type="text/css">
     @import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+    html {
+      height: 100%;
+      background-color: #F3F3F3;
+    }
+
     body {
       padding: 0;
       margin: 0;
       font-family: 'Nunito', Arial, sans-serif;
       color: #808080;
+      height: 100%;
     }
 
+    #header {
+      height: 65px;
+      padding: 0 40px;
+      background-color: #1D2F3F;
+      color: white;
+    }
+
+    .left {
+      float: left;
+      width: 75%;
+    }
+
+    .right {
+      float: left;
+      width: 25%;
+      text-align: right;
+    }
+
+    #legend {
+      background-color: #F3F3F3;
+      height: 5%;
+    }
+
+    #legend svg {
+      width: 100%;
+    }
+
+    #graph {
+      padding: 0;
+      background-color: #F3F3F3;
+      height: 76%;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 20px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 4px;
+    }
+
+    button {
+      background-color: #85CEBB;
+      border: none;
+      outline: none;
+      color: #888;
+      padding: 10px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+
+    .axis {
+      font-size: 12px;
+    }
+
+    .axis-label {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-anchor: middle;
+    }
+
+    .plot {
+      fill-opacity: 1;
+      /*stroke: #27BEC9;*/
+      stroke-width: 6px;
+      stroke-opacity: .5;
+    }
+
+
+    div.tooltip {
+      background: #eee;
+      box-shadow: 0 0 5px #999999;
+      color: #333;
+      position: absolute;
+      padding: 10px;
+      text-align: left;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      border: 0;
+      border-radius: 4px;
+      width: 105px;
+      z-index: 10;
+    }
+
+
+    .grid line {
+      stroke: #D3D3D3;
+      stroke-opacity: 0.7;
+      stroke-dasharray: 1;
+      shape-rendering: crispEdges;
+    }
+
+    .grid path {
+      stroke-width: 0;
+    }
+
+    #nav {
+      height: 46px;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+    }
+
+    /* Style the tab */
+    .tabs {
+      width:90%;
+      overflow: hidden;
+      padding-left: 40px;
+    }
+
+    /* Style the buttons that are used to open the tab content */
+    .tabs button {
+      background-color: inherit;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      transition: 0.3s;
+      border-radius: 0;
+    }
+
+    /* Change background color of buttons on hover */
+    .tabs button:hover {
+      background-color: #ddd;
+    }
+
+    /* Create an active/current tablink class */
+    .tabs button.active {
+      background-color: #ccc;
+    }
+
+    select {
+      margin: 15px;
+      padding: 5px 35px 5px 5px;
+      font-size: 16px;
+      font-family: 'Nunito', Arial, sans-serif;
+      border: 1px solid #ccc;
+      height: 34px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    
   </style>
   <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.21.0/d3-legend.min.js"></script>
 </head>
+
 <body>
 <div id="header">
   <div class="left">
     <h3>
-      Q1 P2
+      Global Suicides Interactive Tool (1985-2015)
     </h3>
+  </div>
+  <div class="right">
+<!--
+    <div class="dropdown">
+      <select name="viewOption" onchange="changeByDropDown(this);">
+        <option value="all">All</option>
+        <option value="gender">By Gender</option>
+        <option value="age">By Age Bracket</option>
+        <option value="generation">By Generation</option>
+        <option value="continent">By Continent</option>
+      </select>
+    </div>
+-->
   </div>
 </div>
 
+<div id="nav">
+  <div class="tabs">
+    <button class="tablinks" onclick="changeView(event, 'all')" id="defaultOpen">ALL</button>
+    <button class="tablinks" onclick="changeView(event, 'gender')">BY GENDER</button>
+    <button class="tablinks" onclick="changeView(event, 'age')">BY AGE BRACKET</button>
+    <button class="tablinks" onclick="changeView(event, 'generation')">BY GENERATION</button>
+    <button class="tablinks" onclick="changeView(event, 'continent')">BY CONTINENT</button>
+  </div>
+</div>  
 
+<div id="legend"></div>
+<div id="graph"></div>
+</body>
 <script>
-  //main();
+  function changeView(evt, viewOption) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    //document.getElementById(cityName).style.display = "block";
+    evt.currentTarget.className += " active";
+
+    main(viewOption);
+  }
+
+  function changeByDropDown(option)  {
+    main(option.value);
+  }
+
+  //Color constants
+  var COLOR1 = "#800000", COLOR2 = "#000080", COLOR3 = "#008000",
+    COLOR4 = "#000000", COLOR5 = "#FF4500", COLOR6 = "#9A71A4", COLOR7 = "#008080";
+
+  var byGender = [{"gender": "male", "year": 1985, "pop": 495587031, "suicides": 83584}, {"gender": "female", "year": 1985, "pop": 513013055, "suicides": 32479}, {"gender": "male", "year": 1986, "pop": 505443747, "suicides": 86818}, {"gender": "female", "year": 1986, "pop": 524465866, "suicides": 33852}, {"gender": "male", "year": 1987, "pop": 535845937, "suicides": 91836}, {"gender": "female", "year": 1987, "pop": 559183789, "suicides": 35006}, {"gender": "male", "year": 1988, "pop": 515314651, "suicides": 88011}, {"gender": "female", "year": 1988, "pop": 538779773, "suicides": 33015}, {"gender": "male", "year": 1989, "pop": 595888144, "suicides": 118883}, {"gender": "female", "year": 1989, "pop": 629626203, "suicides": 41361}, {"gender": "male", "year": 1990, "pop": 712757609, "suicides": 143243}, {"gender": "female", "year": 1990, "pop": 753862491, "suicides": 50118}, {"gender": "male", "year": 1991, "pop": 724180301, "suicides": 148398}, {"gender": "female", "year": 1991, "pop": 765808083, "suicides": 49622}, {"gender": "male", "year": 1992, "pop": 764007306, "suicides": 159906}, {"gender": "female", "year": 1992, "pop": 805532141, "suicides": 51567}, {"gender": "male", "year": 1993, "pop": 745023377, "suicides": 170234}, {"gender": "female", "year": 1993, "pop": 785393277, "suicides": 51331}, {"gender": "male", "year": 1994, "pop": 753924488, "suicides": 180531}, {"gender": "female", "year": 1994, "pop": 794824884, "suicides": 51532}, {"gender": "male", "year": 1995, "pop": 774411078, "suicides": 189040}, {"gender": "female", "year": 1995, "pop": 817148025, "suicides": 54504}, {"gender": "male", "year": 1996, "pop": 809523988, "suicides": 192142}, {"gender": "female", "year": 1996, "pop": 852743674, "suicides": 54583}, {"gender": "male", "year": 1997, "pop": 830527087, "suicides": 186619}, {"gender": "female", "year": 1997, "pop": 872464432, "suicides": 54126}, {"gender": "male", "year": 1998, "pop": 841035908, "suicides": 193960}, {"gender": "female", "year": 1998, "pop": 884145443, "suicides": 55631}, {"gender": "male", "year": 1999, "pop": 865930958, "suicides": 199904}, {"gender": "female", "year": 1999, "pop": 910432197, "suicides": 56215}, {"gender": "male", "year": 2000, "pop": 877679143, "suicides": 200578}, {"gender": "female", "year": 2000, "pop": 921548765, "suicides": 55254}, {"gender": "male", "year": 2001, "pop": 855991252, "suicides": 197653}, {"gender": "female", "year": 2001, "pop": 899574237, "suicides": 52999}, {"gender": "male", "year": 2002, "pop": 888826763, "suicides": 200546}, {"gender": "female", "year": 2002, "pop": 933326052, "suicides": 55549}, {"gender": "male", "year": 2003, "pop": 896480856, "suicides": 200452}, {"gender": "female", "year": 2003, "pop": 941977164, "suicides": 55627}, {"gender": "male", "year": 2004, "pop": 850311967, "suicides": 187629}, {"gender": "female", "year": 2004, "pop": 894934646, "suicides": 53232}, {"gender": "male", "year": 2005, "pop": 846278303, "suicides": 182340}, {"gender": "female", "year": 2005, "pop": 888631342, "suicides": 52035}, {"gender": "male", "year": 2006, "pop": 899150666, "suicides": 181322}, {"gender": "female", "year": 2006, "pop": 941758171, "suicides": 52039}, {"gender": "male", "year": 2007, "pop": 908747477, "suicides": 180084}, {"gender": "female", "year": 2007, "pop": 950816876, "suicides": 53324}, {"gender": "male", "year": 2008, "pop": 909814613, "suicides": 181474}, {"gender": "female", "year": 2008, "pop": 950806238, "suicides": 53973}, {"gender": "male", "year": 2009, "pop": 968248851, "suicides": 188567}, {"gender": "female", "year": 2009, "pop": 1007979515, "suicides": 54920}, {"gender": "male", "year": 2010, "pop": 978902996, "suicides": 184480}, {"gender": "female", "year": 2010, "pop": 1018394333, "suicides": 54222}, {"gender": "male", "year": 2011, "pop": 974700242, "suicides": 181868}, {"gender": "female", "year": 2011, "pop": 1018662090, "suicides": 54616}, {"gender": "male", "year": 2012, "pop": 934418340, "suicides": 177149}, {"gender": "female", "year": 2012, "pop": 978393748, "suicides": 53011}, {"gender": "male", "year": 2013, "pop": 924331532, "suicides": 171740}, {"gender": "female", "year": 2013, "pop": 965830178, "suicides": 51459}, {"gender": "male", "year": 2014, "pop": 934478295, "suicides": 171428}, {"gender": "female", "year": 2014, "pop": 977579014, "suicides": 51556}, {"gender": "male", "year": 2015, "pop": 971779308, "suicides": 167858}, {"gender": "female", "year": 2015, "pop": 934980520, "suicides": 51385}];
+  var byContinent = [{"year": 1985, "continent": "Africa", "pop": 940700, "suicides": 112}, {"year": 1985, "continent": "Asia", "pop": 217624243, "suicides": 36182}, {"year": 1985, "continent": "Europe", "pop": 255560980, "suicides": 34098}, {"year": 1985, "continent": "North America", "pop": 322789149, "suicides": 34749}, {"year": 1985, "continent": "Oceania", "pop": 17588300, "suicides": 2199}, {"year": 1985, "continent": "South America", "pop": 194096714, "suicides": 8723}, {"year": 1986, "continent": "Africa", "pop": 955500, "suicides": 29}, {"year": 1986, "continent": "Asia", "pop": 220380365, "suicides": 37705}, {"year": 1986, "continent": "Europe", "pop": 260436630, "suicides": 34451}, {"year": 1986, "continent": "North America", "pop": 333630389, "suicides": 37123}, {"year": 1986, "continent": "Oceania", "pop": 17835900, "suicides": 2458}, {"year": 1986, "continent": "South America", "pop": 196670829, "suicides": 8904}, {"year": 1987, "continent": "Africa", "pop": 969600, "suicides": 143}, {"year": 1987, "continent": "Asia", "pop": 212022510, "suicides": 30868}, {"year": 1987, "continent": "Europe", "pop": 323988863, "suicides": 46892}, {"year": 1987, "continent": "North America", "pop": 335585166, "suicides": 36948}, {"year": 1987, "continent": "Oceania", "pop": 18093600, "suicides": 2627}, {"year": 1987, "continent": "South America", "pop": 204369987, "suicides": 9364}, {"year": 1988, "continent": "Africa", "pop": 925000, "suicides": 167}, {"year": 1988, "continent": "Asia", "pop": 163458200, "suicides": 26578}, {"year": 1988, "continent": "Europe", "pop": 325166171, "suicides": 45848}, {"year": 1988, "continent": "North America", "pop": 339825653, "suicides": 36509}, {"year": 1988, "continent": "Oceania", "pop": 18367300, "suicides": 2656}, {"year": 1988, "continent": "South America", "pop": 206352100, "suicides": 9268}, {"year": 1989, "continent": "Africa", "pop": 932900, "suicides": 144}, {"year": 1989, "continent": "Asia", "pop": 299832500, "suicides": 62957}, {"year": 1989, "continent": "Europe", "pop": 347701565, "suicides": 48865}, {"year": 1989, "continent": "North America", "pop": 344489523, "suicides": 36492}, {"year": 1989, "continent": "Oceania", "pop": 18634400, "suicides": 2531}, {"year": 1989, "continent": "South America", "pop": 213923459, "suicides": 9255}, {"year": 1990, "continent": "Africa", "pop": 941100, "suicides": 147}, {"year": 1990, "continent": "Asia", "pop": 388892368, "suicides": 72076}, {"year": 1990, "continent": "Europe", "pop": 489804821, "suicides": 71294}, {"year": 1990, "continent": "North America", "pop": 349769497, "suicides": 37659}, {"year": 1990, "continent": "Oceania", "pop": 18896400, "suicides": 2657}, {"year": 1990, "continent": "South America", "pop": 218315914, "suicides": 9528}, {"year": 1991, "continent": "Africa", "pop": 938100, "suicides": 137}, {"year": 1991, "continent": "Asia", "pop": 392268493, "suicides": 71635}, {"year": 1991, "continent": "Europe", "pop": 501870722, "suicides": 76071}, {"year": 1991, "continent": "North America", "pop": 355500975, "suicides": 37770}, {"year": 1991, "continent": "Oceania", "pop": 19277855, "suicides": 2772}, {"year": 1991, "continent": "South America", "pop": 220132239, "suicides": 9635}, {"year": 1992, "continent": "Africa", "pop": 948300, "suicides": 146}, {"year": 1992, "continent": "Asia", "pop": 451368424, "suicides": 80229}, {"year": 1992, "continent": "Europe", "pop": 511017720, "suicides": 78626}, {"year": 1992, "continent": "North America", "pop": 367630164, "suicides": 39958}, {"year": 1992, "continent": "Oceania", "pop": 19501956, "suicides": 2748}, {"year": 1992, "continent": "South America", "pop": 219072883, "suicides": 9766}, {"year": 1993, "continent": "Africa", "pop": 958300, "suicides": 138}, {"year": 1993, "continent": "Asia", "pop": 402623569, "suicides": 88005}, {"year": 1993, "continent": "Europe", "pop": 508382523, "suicides": 79391}, {"year": 1993, "continent": "North America", "pop": 373060095, "suicides": 40911}, {"year": 1993, "continent": "Oceania", "pop": 19707048, "suicides": 2493}, {"year": 1993, "continent": "South America", "pop": 225685119, "suicides": 10627}, {"year": 1994, "continent": "Africa", "pop": 972800, "suicides": 129}, {"year": 1994, "continent": "Asia", "pop": 401376642, "suicides": 95730}, {"year": 1994, "continent": "Europe", "pop": 519543510, "suicides": 81572}, {"year": 1994, "continent": "North America", "pop": 373143149, "suicides": 40579}, {"year": 1994, "continent": "Oceania", "pop": 19933771, "suicides": 2805}, {"year": 1994, "continent": "South America", "pop": 233779500, "suicides": 11248}, {"year": 1995, "continent": "Africa", "pop": 981900, "suicides": 147}, {"year": 1995, "continent": "Asia", "pop": 405908806, "suicides": 98673}, {"year": 1995, "continent": "Europe", "pop": 541166472, "suicides": 88031}, {"year": 1995, "continent": "North America", "pop": 383146136, "suicides": 41911}, {"year": 1995, "continent": "Oceania", "pop": 20206023, "suicides": 2717}, {"year": 1995, "continent": "South America", "pop": 240149766, "suicides": 12065}, {"year": 1996, "continent": "Africa", "pop": 38768652, "suicides": 296}, {"year": 1996, "continent": "Asia", "pop": 424019330, "suicides": 102486}, {"year": 1996, "continent": "Europe", "pop": 542155830, "suicides": 87387}, {"year": 1996, "continent": "North America", "pop": 392447168, "suicides": 41365}, {"year": 1996, "continent": "Oceania", "pop": 20514726, "suicides": 2972}, {"year": 1996, "continent": "South America", "pop": 244361956, "suicides": 12219}, {"year": 1997, "continent": "Africa", "pop": 39539857, "suicides": 226}, {"year": 1997, "continent": "Asia", "pop": 489792445, "suicides": 102641}, {"year": 1997, "continent": "Europe", "pop": 506949800, "suicides": 81092}, {"year": 1997, "continent": "North America", "pop": 397241000, "suicides": 41113}, {"year": 1997, "continent": "Oceania", "pop": 20759828, "suicides": 3213}, {"year": 1997, "continent": "South America", "pop": 248708589, "suicides": 12460}, {"year": 1998, "continent": "Africa", "pop": 40258768, "suicides": 335}, {"year": 1998, "continent": "Asia", "pop": 493314362, "suicides": 110437}, {"year": 1998, "continent": "Europe", "pop": 515220667, "suicides": 80754}, {"year": 1998, "continent": "North America", "pop": 402456783, "suicides": 41234}, {"year": 1998, "continent": "Oceania", "pop": 20994100, "suicides": 3210}, {"year": 1998, "continent": "South America", "pop": 252936671, "suicides": 13621}, {"year": 1999, "continent": "Africa", "pop": 40949960, "suicides": 453}, {"year": 1999, "continent": "Asia", "pop": 496662227, "suicides": 114594}, {"year": 1999, "continent": "Europe", "pop": 553102293, "suicides": 84281}, {"year": 1999, "continent": "North America", "pop": 407235777, "suicides": 40234}, {"year": 1999, "continent": "Oceania", "pop": 21261940, "suicides": 3004}, {"year": 1999, "continent": "South America", "pop": 257150958, "suicides": 13553}, {"year": 2000, "continent": "Africa", "pop": 41624632, "suicides": 404}, {"year": 2000, "continent": "Asia", "pop": 500335251, "suicides": 112895}, {"year": 2000, "continent": "Europe", "pop": 554446552, "suicides": 85202}, {"year": 2000, "continent": "North America", "pop": 420626781, "suicides": 39819}, {"year": 2000, "continent": "Oceania", "pop": 21520540, "suicides": 2849}, {"year": 2000, "continent": "South America", "pop": 260674152, "suicides": 14663}, {"year": 2001, "continent": "Africa", "pop": 42329909, "suicides": 503}, {"year": 2001, "continent": "Asia", "pop": 445167481, "suicides": 106873}, {"year": 2001, "continent": "Europe", "pop": 554102550, "suicides": 82586}, {"year": 2001, "continent": "North America", "pop": 426052899, "suicides": 41305}, {"year": 2001, "continent": "Oceania", "pop": 22523283, "suicides": 3002}, {"year": 2001, "continent": "South America", "pop": 265389367, "suicides": 16383}, {"year": 2002, "continent": "Africa", "pop": 42960527, "suicides": 372}, {"year": 2002, "continent": "Asia", "pop": 504976383, "suicides": 111510}, {"year": 2002, "continent": "Europe", "pop": 550313765, "suicides": 82572}, {"year": 2002, "continent": "North America", "pop": 431652705, "suicides": 42298}, {"year": 2002, "continent": "Oceania", "pop": 22752435, "suicides": 2828}, {"year": 2002, "continent": "South America", "pop": 269497000, "suicides": 16515}, {"year": 2003, "continent": "Africa", "pop": 43585945, "suicides": 352}, {"year": 2003, "continent": "Asia", "pop": 509984093, "suicides": 112131}, {"year": 2003, "continent": "Europe", "pop": 552053395, "suicides": 81658}, {"year": 2003, "continent": "North America", "pop": 436162544, "suicides": 42543}, {"year": 2003, "continent": "Oceania", "pop": 23063040, "suicides": 2685}, {"year": 2003, "continent": "South America", "pop": 273609003, "suicides": 16710}, {"year": 2004, "continent": "Africa", "pop": 44188700, "suicides": 486}, {"year": 2004, "continent": "Asia", "pop": 423112182, "suicides": 102248}, {"year": 2004, "continent": "Europe", "pop": 535885354, "suicides": 75268}, {"year": 2004, "continent": "North America", "pop": 441007218, "suicides": 43333}, {"year": 2004, "continent": "Oceania", "pop": 23385469, "suicides": 2633}, {"year": 2004, "continent": "South America", "pop": 277667690, "suicides": 16893}, {"year": 2005, "continent": "Africa", "pop": 44760949, "suicides": 565}, {"year": 2005, "continent": "Asia", "pop": 428381183, "suicides": 99173}, {"year": 2005, "continent": "Europe", "pop": 529638173, "suicides": 73108}, {"year": 2005, "continent": "North America", "pop": 445917080, "suicides": 43701}, {"year": 2005, "continent": "Oceania", "pop": 4581887, "suicides": 536}, {"year": 2005, "continent": "South America", "pop": 281630373, "suicides": 17292}, {"year": 2006, "continent": "Africa", "pop": 45286049, "suicides": 640}, {"year": 2006, "continent": "Asia", "pop": 500173662, "suicides": 98423}, {"year": 2006, "continent": "Europe", "pop": 534770649, "suicides": 69840}, {"year": 2006, "continent": "North America", "pop": 451387012, "suicides": 44100}, {"year": 2006, "continent": "Oceania", "pop": 23745605, "suicides": 2668}, {"year": 2006, "continent": "South America", "pop": 285545860, "suicides": 17690}, {"year": 2007, "continent": "Africa", "pop": 45794999, "suicides": 550}, {"year": 2007, "continent": "Asia", "pop": 483378855, "suicides": 95309}, {"year": 2007, "continent": "Europe", "pop": 563570281, "suicides": 71365}, {"year": 2007, "continent": "North America", "pop": 453075604, "suicides": 45506}, {"year": 2007, "continent": "Oceania", "pop": 24414935, "suicides": 2736}, {"year": 2007, "continent": "South America", "pop": 289329679, "suicides": 17942}, {"year": 2008, "continent": "Africa", "pop": 44909744, "suicides": 529}, {"year": 2008, "continent": "Asia", "pop": 486764222, "suicides": 92590}, {"year": 2008, "continent": "Europe", "pop": 553446493, "suicides": 73185}, {"year": 2008, "continent": "North America", "pop": 457657845, "suicides": 47706}, {"year": 2008, "continent": "Oceania", "pop": 24842420, "suicides": 2898}, {"year": 2008, "continent": "South America", "pop": 293000127, "suicides": 18539}, {"year": 2009, "continent": "Africa", "pop": 46850028, "suicides": 491}, {"year": 2009, "continent": "Asia", "pop": 583437969, "suicides": 97135}, {"year": 2009, "continent": "Europe", "pop": 558287220, "suicides": 75014}, {"year": 2009, "continent": "North America", "pop": 465762285, "suicides": 49300}, {"year": 2009, "continent": "Oceania", "pop": 25301700, "suicides": 2875}, {"year": 2009, "continent": "South America", "pop": 296589164, "suicides": 18672}, {"year": 2010, "continent": "Africa", "pop": 47425016, "suicides": 497}, {"year": 2010, "continent": "Asia", "pop": 590308173, "suicides": 92483}, {"year": 2010, "continent": "Europe", "pop": 558376561, "suicides": 73477}, {"year": 2010, "continent": "North America", "pop": 476165271, "suicides": 50786}, {"year": 2010, "continent": "Oceania", "pop": 24903017, "suicides": 2956}, {"year": 2010, "continent": "South America", "pop": 300119291, "suicides": 18503}, {"year": 2011, "continent": "Africa", "pop": 48512987, "suicides": 523}, {"year": 2011, "continent": "Asia", "pop": 583501533, "suicides": 89650}, {"year": 2011, "continent": "Europe", "pop": 553783575, "suicides": 72545}, {"year": 2011, "continent": "North America", "pop": 481343418, "suicides": 52503}, {"year": 2011, "continent": "Oceania", "pop": 25748695, "suicides": 2923}, {"year": 2011, "continent": "South America", "pop": 300472124, "suicides": 18340}, {"year": 2012, "continent": "Africa", "pop": 48746027, "suicides": 605}, {"year": 2012, "continent": "Asia", "pop": 501239583, "suicides": 82252}, {"year": 2012, "continent": "Europe", "pop": 547043802, "suicides": 71074}, {"year": 2012, "continent": "North America", "pop": 482646451, "suicides": 53376}, {"year": 2012, "continent": "Oceania", "pop": 26142718, "suicides": 3161}, {"year": 2012, "continent": "South America", "pop": 306993507, "suicides": 19692}, {"year": 2013, "continent": "Africa", "pop": 49422630, "suicides": 694}, {"year": 2013, "continent": "Asia", "pop": 503748981, "suicides": 81699}, {"year": 2013, "continent": "Europe", "pop": 513231619, "suicides": 64078}, {"year": 2013, "continent": "North America", "pop": 487740295, "suicides": 54415}, {"year": 2013, "continent": "Oceania", "pop": 25729950, "suicides": 3121}, {"year": 2013, "continent": "South America", "pop": 310288235, "suicides": 19192}, {"year": 2014, "continent": "Africa", "pop": 50147398, "suicides": 704}, {"year": 2014, "continent": "Asia", "pop": 510042878, "suicides": 76988}, {"year": 2014, "continent": "Europe", "pop": 558637782, "suicides": 70508}, {"year": 2014, "continent": "North America", "pop": 458462803, "suicides": 52284}, {"year": 2014, "continent": "Oceania", "pop": 21927587, "suicides": 2891}, {"year": 2014, "continent": "South America", "pop": 312838861, "suicides": 19609}, {"year": 2015, "continent": "Africa", "pop": 51860689, "suicides": 691}, {"year": 2015, "continent": "Asia", "pop": 534182402, "suicides": 76115}, {"year": 2015, "continent": "Europe", "pop": 533995861, "suicides": 65769}, {"year": 2015, "continent": "North America", "pop": 454912411, "suicides": 53532}, {"year": 2015, "continent": "Oceania", "pop": 22240785, "suicides": 3027}, {"year": 2015, "continent": "South America", "pop": 309567680, "suicides": 20109}];
+  var byGeneration = [{"year": 1985, "gen": "Generation X", "pop": 396166961, "suicides": 18854}, {"year": 1985, "gen": "Silent", "pop": 246046628, "suicides": 35748}, {"year": 1985, "gen": "Boomers", "pop": 173536624, "suicides": 20771}, {"year": 1985, "gen": "G.I. Generation", "pop": 192849873, "suicides": 40690}, {"year": 1985, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1985, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1986, "gen": "Generation X", "pop": 402054011, "suicides": 19007}, {"year": 1986, "gen": "Silent", "pop": 253601356, "suicides": 37558}, {"year": 1986, "gen": "Boomers", "pop": 176214788, "suicides": 21685}, {"year": 1986, "gen": "G.I. Generation", "pop": 198039458, "suicides": 42420}, {"year": 1986, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1986, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1987, "gen": "Generation X", "pop": 416902084, "suicides": 17367}, {"year": 1987, "gen": "Silent", "pop": 273473250, "suicides": 40649}, {"year": 1987, "gen": "Boomers", "pop": 188988532, "suicides": 22309}, {"year": 1987, "gen": "G.I. Generation", "pop": 215665860, "suicides": 46517}, {"year": 1987, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1987, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1988, "gen": "Generation X", "pop": 391372083, "suicides": 16174}, {"year": 1988, "gen": "Silent", "pop": 267264139, "suicides": 38770}, {"year": 1988, "gen": "Boomers", "pop": 181934957, "suicides": 21332}, {"year": 1988, "gen": "G.I. Generation", "pop": 213523245, "suicides": 44750}, {"year": 1988, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1988, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1989, "gen": "Generation X", "pop": 442264948, "suicides": 19786}, {"year": 1989, "gen": "Silent", "pop": 316627576, "suicides": 53541}, {"year": 1989, "gen": "Boomers", "pop": 213566446, "suicides": 29427}, {"year": 1989, "gen": "G.I. Generation", "pop": 253055377, "suicides": 57490}, {"year": 1989, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1989, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1990, "gen": "Generation X", "pop": 527184770, "suicides": 24725}, {"year": 1990, "gen": "Silent", "pop": 381429036, "suicides": 65242}, {"year": 1990, "gen": "Boomers", "pop": 255943494, "suicides": 35276}, {"year": 1990, "gen": "G.I. Generation", "pop": 302062800, "suicides": 68118}, {"year": 1990, "gen": "Millenials", "pop": 0, "suicides": 0}, {"year": 1990, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1991, "gen": "Generation X", "pop": 263683586, "suicides": 23317}, {"year": 1991, "gen": "Silent", "pop": 241269189, "suicides": 48315}, {"year": 1991, "gen": "Boomers", "pop": 649497073, "suicides": 103989}, {"year": 1991, "gen": "G.I. Generation", "pop": 67887929, "suicides": 20866}, {"year": 1991, "gen": "Millenials", "pop": 267650607, "suicides": 1533}, {"year": 1991, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1992, "gen": "Generation X", "pop": 278729125, "suicides": 24727}, {"year": 1992, "gen": "Silent", "pop": 251982954, "suicides": 51506}, {"year": 1992, "gen": "Boomers", "pop": 683212143, "suicides": 112809}, {"year": 1992, "gen": "G.I. Generation", "pop": 69549420, "suicides": 20744}, {"year": 1992, "gen": "Millenials", "pop": 286065805, "suicides": 1687}, {"year": 1992, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1993, "gen": "Generation X", "pop": 267069051, "suicides": 25262}, {"year": 1993, "gen": "Silent", "pop": 251229172, "suicides": 54278}, {"year": 1993, "gen": "Boomers", "pop": 667789023, "suicides": 119714}, {"year": 1993, "gen": "G.I. Generation", "pop": 68679641, "suicides": 20522}, {"year": 1993, "gen": "Millenials", "pop": 275649767, "suicides": 1789}, {"year": 1993, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1994, "gen": "Generation X", "pop": 267468800, "suicides": 27296}, {"year": 1994, "gen": "Silent", "pop": 258671110, "suicides": 56576}, {"year": 1994, "gen": "Boomers", "pop": 680810771, "suicides": 125932}, {"year": 1994, "gen": "G.I. Generation", "pop": 69778631, "suicides": 20499}, {"year": 1994, "gen": "Millenials", "pop": 272020060, "suicides": 1760}, {"year": 1994, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1995, "gen": "Generation X", "pop": 540577753, "suicides": 71832}, {"year": 1995, "gen": "Silent", "pop": 267815735, "suicides": 59138}, {"year": 1995, "gen": "Boomers", "pop": 434002463, "suicides": 89752}, {"year": 1995, "gen": "G.I. Generation", "pop": 72617633, "suicides": 20901}, {"year": 1995, "gen": "Millenials", "pop": 276545519, "suicides": 1921}, {"year": 1995, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1996, "gen": "Generation X", "pop": 564323631, "suicides": 72958}, {"year": 1996, "gen": "Silent", "pop": 276361725, "suicides": 59979}, {"year": 1996, "gen": "Boomers", "pop": 454968532, "suicides": 91280}, {"year": 1996, "gen": "G.I. Generation", "pop": 75677343, "suicides": 20643}, {"year": 1996, "gen": "Millenials", "pop": 290936431, "suicides": 1865}, {"year": 1996, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1997, "gen": "Generation X", "pop": 579541353, "suicides": 71315}, {"year": 1997, "gen": "Silent", "pop": 277090379, "suicides": 58672}, {"year": 1997, "gen": "Boomers", "pop": 466646342, "suicides": 88012}, {"year": 1997, "gen": "G.I. Generation", "pop": 77189260, "suicides": 20866}, {"year": 1997, "gen": "Millenials", "pop": 302524185, "suicides": 1880}, {"year": 1997, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1998, "gen": "Generation X", "pop": 582857949, "suicides": 72523}, {"year": 1998, "gen": "Silent", "pop": 281202250, "suicides": 61642}, {"year": 1998, "gen": "Boomers", "pop": 478662917, "suicides": 91627}, {"year": 1998, "gen": "G.I. Generation", "pop": 79622566, "suicides": 21717}, {"year": 1998, "gen": "Millenials", "pop": 302835669, "suicides": 2082}, {"year": 1998, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 1999, "gen": "Generation X", "pop": 595838042, "suicides": 73550}, {"year": 1999, "gen": "Silent", "pop": 289611423, "suicides": 62664}, {"year": 1999, "gen": "Boomers", "pop": 500176591, "suicides": 96223}, {"year": 1999, "gen": "G.I. Generation", "pop": 83642072, "suicides": 21633}, {"year": 1999, "gen": "Millenials", "pop": 307095027, "suicides": 2049}, {"year": 1999, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2000, "gen": "Generation X", "pop": 601298226, "suicides": 73347}, {"year": 2000, "gen": "Silent", "pop": 291933570, "suicides": 60973}, {"year": 2000, "gen": "Boomers", "pop": 512406074, "suicides": 97814}, {"year": 2000, "gen": "G.I. Generation", "pop": 86361616, "suicides": 21633}, {"year": 2000, "gen": "Millenials", "pop": 307228422, "suicides": 2065}, {"year": 2000, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2001, "gen": "Generation X", "pop": 284481809, "suicides": 40279}, {"year": 2001, "gen": "Silent", "pop": 375094161, "suicides": 80474}, {"year": 2001, "gen": "Boomers", "pop": 503304611, "suicides": 96998}, {"year": 2001, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2001, "gen": "Millenials", "pop": 592684908, "suicides": 32901}, {"year": 2001, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2002, "gen": "Generation X", "pop": 296207160, "suicides": 41536}, {"year": 2002, "gen": "Silent", "pop": 390568268, "suicides": 82733}, {"year": 2002, "gen": "Boomers", "pop": 524892282, "suicides": 98675}, {"year": 2002, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2002, "gen": "Millenials", "pop": 610485105, "suicides": 33151}, {"year": 2002, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2003, "gen": "Generation X", "pop": 296827661, "suicides": 41053}, {"year": 2003, "gen": "Silent", "pop": 399497703, "suicides": 83902}, {"year": 2003, "gen": "Boomers", "pop": 531132194, "suicides": 98693}, {"year": 2003, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2003, "gen": "Millenials", "pop": 611000462, "suicides": 32431}, {"year": 2003, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2004, "gen": "Generation X", "pop": 279976620, "suicides": 38221}, {"year": 2004, "gen": "Silent", "pop": 394351136, "suicides": 79568}, {"year": 2004, "gen": "Boomers", "pop": 509520667, "suicides": 92531}, {"year": 2004, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2004, "gen": "Millenials", "pop": 561398190, "suicides": 30541}, {"year": 2004, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2005, "gen": "Generation X", "pop": 278296962, "suicides": 37442}, {"year": 2005, "gen": "Silent", "pop": 398079136, "suicides": 79037}, {"year": 2005, "gen": "Boomers", "pop": 507445700, "suicides": 88498}, {"year": 2005, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2005, "gen": "Millenials", "pop": 551087847, "suicides": 29398}, {"year": 2005, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2006, "gen": "Generation X", "pop": 295325866, "suicides": 37221}, {"year": 2006, "gen": "Silent", "pop": 420613525, "suicides": 79416}, {"year": 2006, "gen": "Boomers", "pop": 536511821, "suicides": 87032}, {"year": 2006, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2006, "gen": "Millenials", "pop": 588457625, "suicides": 29692}, {"year": 2006, "gen": "Generation Z", "pop": 0, "suicides": 0}, {"year": 2007, "gen": "Generation X", "pop": 298222521, "suicides": 37936}, {"year": 2007, "gen": "Silent", "pop": 431929139, "suicides": 80382}, {"year": 2007, "gen": "Boomers", "pop": 542880362, "suicides": 85749}, {"year": 2007, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2007, "gen": "Millenials", "pop": 305436926, "suicides": 27670}, {"year": 2007, "gen": "Generation Z", "pop": 281095405, "suicides": 1671}, {"year": 2008, "gen": "Generation X", "pop": 297532003, "suicides": 37756}, {"year": 2008, "gen": "Silent", "pop": 439194787, "suicides": 81242}, {"year": 2008, "gen": "Boomers", "pop": 542789284, "suicides": 86664}, {"year": 2008, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2008, "gen": "Millenials", "pop": 302200881, "suicides": 28145}, {"year": 2008, "gen": "Generation Z", "pop": 278903896, "suicides": 1640}, {"year": 2009, "gen": "Generation X", "pop": 318594904, "suicides": 39389}, {"year": 2009, "gen": "Silent", "pop": 463594373, "suicides": 83386}, {"year": 2009, "gen": "Boomers", "pop": 575243831, "suicides": 90390}, {"year": 2009, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2009, "gen": "Millenials", "pop": 321540733, "suicides": 28487}, {"year": 2009, "gen": "Generation Z", "pop": 297254525, "suicides": 1835}, {"year": 2010, "gen": "Generation X", "pop": 902411289, "suicides": 125681}, {"year": 2010, "gen": "Silent", "pop": 476070170, "suicides": 83577}, {"year": 2010, "gen": "Boomers", "pop": 0, "suicides": 0}, {"year": 2010, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2010, "gen": "Millenials", "pop": 321498365, "suicides": 27684}, {"year": 2010, "gen": "Generation Z", "pop": 297317505, "suicides": 1760}, {"year": 2011, "gen": "Generation X", "pop": 578742563, "suicides": 85345}, {"year": 2011, "gen": "Silent", "pop": 117475364, "suicides": 24209}, {"year": 2011, "gen": "Boomers", "pop": 367532048, "suicides": 59178}, {"year": 2011, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2011, "gen": "Millenials", "pop": 635374213, "suicides": 65873}, {"year": 2011, "gen": "Generation Z", "pop": 294238144, "suicides": 1879}, {"year": 2012, "gen": "Generation X", "pop": 558344819, "suicides": 82482}, {"year": 2012, "gen": "Silent", "pop": 119082315, "suicides": 24578}, {"year": 2012, "gen": "Boomers", "pop": 365281729, "suicides": 58443}, {"year": 2012, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2012, "gen": "Millenials", "pop": 598422352, "suicides": 62905}, {"year": 2012, "gen": "Generation Z", "pop": 271680873, "suicides": 1752}, {"year": 2013, "gen": "Generation X", "pop": 550420191, "suicides": 80227}, {"year": 2013, "gen": "Silent", "pop": 119719189, "suicides": 24153}, {"year": 2013, "gen": "Boomers", "pop": 364931201, "suicides": 57696}, {"year": 2013, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2013, "gen": "Millenials", "pop": 586915953, "suicides": 59317}, {"year": 2013, "gen": "Generation Z", "pop": 268175176, "suicides": 1806}, {"year": 2014, "gen": "Generation X", "pop": 556105537, "suicides": 79132}, {"year": 2014, "gen": "Silent", "pop": 123129495, "suicides": 24865}, {"year": 2014, "gen": "Boomers", "pop": 374038522, "suicides": 57696}, {"year": 2014, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2014, "gen": "Millenials", "pop": 590543770, "suicides": 59409}, {"year": 2014, "gen": "Generation Z", "pop": 268239985, "suicides": 1882}, {"year": 2015, "gen": "Generation X", "pop": 515972039, "suicides": 71298}, {"year": 2015, "gen": "Silent", "pop": 121998934, "suicides": 23681}, {"year": 2015, "gen": "Boomers", "pop": 354566127, "suicides": 53588}, {"year": 2015, "gen": "G.I. Generation", "pop": 0, "suicides": 0}, {"year": 2015, "gen": "Millenials", "pop": 540924338, "suicides": 53959}, {"year": 2015, "gen": "Generation Z", "pop": 373298390, "suicides": 16717}];
+  var byAgeBracket = [{"age": "15-24 years", "year": 1985, "pop": 328972085, "suicides": 18466}, {"age": "25-34 years", "year": 1985, "pop": 181686605, "suicides": 20810}, {"age": "35-54 years", "year": 1985, "pop": 256119370, "suicides": 35787}, {"age": "55-74 years", "year": 1985, "pop": 188311132, "suicides": 28966}, {"age": "75+ years", "year": 1985, "pop": 53510894, "suicides": 12034}, {"age": "15-24 years", "year": 1986, "pop": 297352693, "suicides": 18612}, {"age": "25-34 years", "year": 1986, "pop": 215944628, "suicides": 21774}, {"age": "35-54 years", "year": 1986, "pop": 273739737, "suicides": 37621}, {"age": "55-74 years", "year": 1986, "pop": 182719958, "suicides": 29901}, {"age": "75+ years", "year": 1986, "pop": 60152597, "suicides": 12762}, {"age": "15-24 years", "year": 1987, "pop": 355995307, "suicides": 17097}, {"age": "25-34 years", "year": 1987, "pop": 195856932, "suicides": 22353}, {"age": "35-54 years", "year": 1987, "pop": 290001687, "suicides": 40756}, {"age": "55-74 years", "year": 1987, "pop": 177075047, "suicides": 32502}, {"age": "75+ years", "year": 1987, "pop": 76100753, "suicides": 14134}, {"age": "15-24 years", "year": 1988, "pop": 326881331, "suicides": 15896}, {"age": "25-34 years", "year": 1988, "pop": 201150362, "suicides": 21474}, {"age": "35-54 years", "year": 1988, "pop": 282063556, "suicides": 38819}, {"age": "55-74 years", "year": 1988, "pop": 196741669, "suicides": 30625}, {"age": "75+ years", "year": 1988, "pop": 47257506, "suicides": 14212}, {"age": "15-24 years", "year": 1989, "pop": 398069644, "suicides": 19616}, {"age": "25-34 years", "year": 1989, "pop": 218583359, "suicides": 29466}, {"age": "35-54 years", "year": 1989, "pop": 323699527, "suicides": 53572}, {"age": "55-74 years", "year": 1989, "pop": 208707961, "suicides": 40133}, {"age": "75+ years", "year": 1989, "pop": 76453856, "suicides": 17457}, {"age": "15-24 years", "year": 1990, "pop": 407742869, "suicides": 24171}, {"age": "25-34 years", "year": 1990, "pop": 310396556, "suicides": 35539}, {"age": "35-54 years", "year": 1990, "pop": 390969321, "suicides": 65290}, {"age": "55-74 years", "year": 1990, "pop": 252283491, "suicides": 47127}, {"age": "75+ years", "year": 1990, "pop": 105227863, "suicides": 21234}, {"age": "15-24 years", "year": 1991, "pop": 460601580, "suicides": 24478}, {"age": "25-34 years", "year": 1991, "pop": 273764495, "suicides": 35776}, {"age": "35-54 years", "year": 1991, "pop": 394685295, "suicides": 68391}, {"age": "55-74 years", "year": 1991, "pop": 274579279, "suicides": 48440}, {"age": "75+ years", "year": 1991, "pop": 86357735, "suicides": 20935}, {"age": "15-24 years", "year": 1992, "pop": 477222375, "suicides": 26043}, {"age": "25-34 years", "year": 1992, "pop": 295293141, "suicides": 37866}, {"age": "35-54 years", "year": 1992, "pop": 443859412, "suicides": 75196}, {"age": "55-74 years", "year": 1992, "pop": 279257144, "suicides": 51590}, {"age": "75+ years", "year": 1992, "pop": 73907375, "suicides": 20778}, {"age": "15-24 years", "year": 1993, "pop": 437448791, "suicides": 26641}, {"age": "25-34 years", "year": 1993, "pop": 306044568, "suicides": 39244}, {"age": "35-54 years", "year": 1993, "pop": 438611181, "suicides": 80763}, {"age": "55-74 years", "year": 1993, "pop": 256196563, "suicides": 54319}, {"age": "75+ years", "year": 1993, "pop": 92115551, "suicides": 20598}, {"age": "15-24 years", "year": 1994, "pop": 425753864, "suicides": 28584}, {"age": "25-34 years", "year": 1994, "pop": 316322383, "suicides": 41182}, {"age": "35-54 years", "year": 1994, "pop": 426483258, "suicides": 85036}, {"age": "55-74 years", "year": 1994, "pop": 280912810, "suicides": 56652}, {"age": "75+ years", "year": 1994, "pop": 99277057, "suicides": 20609}, {"age": "15-24 years", "year": 1995, "pop": 467160424, "suicides": 30876}, {"age": "25-34 years", "year": 1995, "pop": 289643404, "suicides": 42545}, {"age": "35-54 years", "year": 1995, "pop": 437121592, "suicides": 89791}, {"age": "55-74 years", "year": 1995, "pop": 309282731, "suicides": 59348}, {"age": "75+ years", "year": 1995, "pop": 88361521, "suicides": 20986}, {"age": "15-24 years", "year": 1996, "pop": 434665551, "suicides": 31532}, {"age": "25-34 years", "year": 1996, "pop": 333991583, "suicides": 42821}, {"age": "35-54 years", "year": 1996, "pop": 478328301, "suicides": 91443}, {"age": "55-74 years", "year": 1996, "pop": 296981063, "suicides": 60121}, {"age": "75+ years", "year": 1996, "pop": 118290595, "suicides": 20806}, {"age": "15-24 years", "year": 1997, "pop": 485279695, "suicides": 31423}, {"age": "25-34 years", "year": 1997, "pop": 304547360, "suicides": 41302}, {"age": "35-54 years", "year": 1997, "pop": 477120227, "suicides": 88106}, {"age": "55-74 years", "year": 1997, "pop": 319339481, "suicides": 58902}, {"age": "75+ years", "year": 1997, "pop": 116704756, "suicides": 21012}, {"age": "15-24 years", "year": 1998, "pop": 475605939, "suicides": 32129}, {"age": "25-34 years", "year": 1998, "pop": 317540167, "suicides": 41816}, {"age": "35-54 years", "year": 1998, "pop": 497897790, "suicides": 91854}, {"age": "55-74 years", "year": 1998, "pop": 306953587, "suicides": 61829}, {"age": "75+ years", "year": 1998, "pop": 127183868, "suicides": 21963}, {"age": "15-24 years", "year": 1999, "pop": 501280426, "suicides": 33013}, {"age": "25-34 years", "year": 1999, "pop": 307539202, "suicides": 42040}, {"age": "35-54 years", "year": 1999, "pop": 535012283, "suicides": 96413}, {"age": "55-74 years", "year": 1999, "pop": 326755728, "suicides": 62921}, {"age": "75+ years", "year": 1999, "pop": 105775516, "suicides": 21732}, {"age": "15-24 years", "year": 2000, "pop": 455563353, "suicides": 33069}, {"age": "25-34 years", "year": 2000, "pop": 346702056, "suicides": 41838}, {"age": "35-54 years", "year": 2000, "pop": 523661873, "suicides": 97893}, {"age": "55-74 years", "year": 2000, "pop": 371427327, "suicides": 61267}, {"age": "75+ years", "year": 2000, "pop": 101873299, "suicides": 21765}, {"age": "15-24 years", "year": 2001, "pop": 447113864, "suicides": 32048}, {"age": "25-34 years", "year": 2001, "pop": 336437368, "suicides": 40607}, {"age": "35-54 years", "year": 2001, "pop": 521286750, "suicides": 97171}, {"age": "55-74 years", "year": 2001, "pop": 307356463, "suicides": 59133}, {"age": "75+ years", "year": 2001, "pop": 143371044, "suicides": 21693}, {"age": "15-24 years", "year": 2002, "pop": 460333723, "suicides": 32184}, {"age": "25-34 years", "year": 2002, "pop": 360543462, "suicides": 41816}, {"age": "35-54 years", "year": 2002, "pop": 563335685, "suicides": 98979}, {"age": "55-74 years", "year": 2002, "pop": 328041038, "suicides": 60604}, {"age": "75+ years", "year": 2002, "pop": 109898907, "suicides": 22512}, {"age": "15-24 years", "year": 2003, "pop": 460760059, "suicides": 31581}, {"age": "25-34 years", "year": 2003, "pop": 353120088, "suicides": 41386}, {"age": "35-54 years", "year": 2003, "pop": 544893931, "suicides": 98815}, {"age": "55-74 years", "year": 2003, "pop": 343453509, "suicides": 61037}, {"age": "75+ years", "year": 2003, "pop": 136230433, "suicides": 23260}, {"age": "15-24 years", "year": 2004, "pop": 435734745, "suicides": 29726}, {"age": "25-34 years", "year": 2004, "pop": 325649184, "suicides": 38447}, {"age": "35-54 years", "year": 2004, "pop": 514976495, "suicides": 92619}, {"age": "55-74 years", "year": 2004, "pop": 337253362, "suicides": 57331}, {"age": "75+ years", "year": 2004, "pop": 131669181, "suicides": 22739}, {"age": "15-24 years", "year": 2005, "pop": 428523160, "suicides": 28551}, {"age": "25-34 years", "year": 2005, "pop": 303439452, "suicides": 37595}, {"age": "35-54 years", "year": 2005, "pop": 518631043, "suicides": 88670}, {"age": "55-74 years", "year": 2005, "pop": 330899027, "suicides": 56864}, {"age": "75+ years", "year": 2005, "pop": 153380609, "suicides": 22694}, {"age": "15-24 years", "year": 2006, "pop": 449276750, "suicides": 28814}, {"age": "25-34 years", "year": 2006, "pop": 302383310, "suicides": 37266}, {"age": "35-54 years", "year": 2006, "pop": 565120748, "suicides": 87216}, {"age": "55-74 years", "year": 2006, "pop": 354872004, "suicides": 56877}, {"age": "75+ years", "year": 2006, "pop": 169256025, "suicides": 23188}, {"age": "15-24 years", "year": 2007, "pop": 443854549, "suicides": 28461}, {"age": "25-34 years", "year": 2007, "pop": 318248848, "suicides": 38063}, {"age": "35-54 years", "year": 2007, "pop": 558005677, "suicides": 85895}, {"age": "55-74 years", "year": 2007, "pop": 335780467, "suicides": 57017}, {"age": "75+ years", "year": 2007, "pop": 203674812, "suicides": 23972}, {"age": "15-24 years", "year": 2008, "pop": 439065202, "suicides": 28931}, {"age": "25-34 years", "year": 2008, "pop": 317773598, "suicides": 37901}, {"age": "35-54 years", "year": 2008, "pop": 552870333, "suicides": 86796}, {"age": "55-74 years", "year": 2008, "pop": 382506944, "suicides": 57989}, {"age": "75+ years", "year": 2008, "pop": 168404774, "suicides": 23830}, {"age": "15-24 years", "year": 2009, "pop": 452245836, "suicides": 29230}, {"age": "25-34 years", "year": 2009, "pop": 329060661, "suicides": 39482}, {"age": "35-54 years", "year": 2009, "pop": 599911931, "suicides": 90538}, {"age": "55-74 years", "year": 2009, "pop": 404140907, "suicides": 60321}, {"age": "75+ years", "year": 2009, "pop": 190869031, "suicides": 23916}, {"age": "15-24 years", "year": 2010, "pop": 448070265, "suicides": 28294}, {"age": "25-34 years", "year": 2010, "pop": 347363813, "suicides": 38469}, {"age": "35-54 years", "year": 2010, "pop": 599602959, "suicides": 87625}, {"age": "55-74 years", "year": 2010, "pop": 429430183, "suicides": 60076}, {"age": "75+ years", "year": 2010, "pop": 172860245, "suicides": 24239}, {"age": "15-24 years", "year": 2011, "pop": 383789502, "suicides": 28226}, {"age": "25-34 years", "year": 2011, "pop": 335266492, "suicides": 38075}, {"age": "35-54 years", "year": 2011, "pop": 612646982, "suicides": 85651}, {"age": "55-74 years", "year": 2011, "pop": 439819063, "suicides": 59724}, {"age": "75+ years", "year": 2011, "pop": 221810157, "suicides": 24807}, {"age": "15-24 years", "year": 2012, "pop": 417614908, "suicides": 26913}, {"age": "25-34 years", "year": 2012, "pop": 313988596, "suicides": 36675}, {"age": "35-54 years", "year": 2012, "pop": 571898605, "suicides": 82663}, {"age": "55-74 years", "year": 2012, "pop": 408982726, "suicides": 58778}, {"age": "75+ years", "year": 2012, "pop": 200327253, "suicides": 25131}, {"age": "15-24 years", "year": 2013, "pop": 409593001, "suicides": 24848}, {"age": "25-34 years", "year": 2013, "pop": 310456962, "suicides": 35174}, {"age": "35-54 years", "year": 2013, "pop": 577237226, "suicides": 80323}, {"age": "55-74 years", "year": 2013, "pop": 383912623, "suicides": 57907}, {"age": "75+ years", "year": 2013, "pop": 208961898, "suicides": 24947}, {"age": "15-24 years", "year": 2014, "pop": 414162617, "suicides": 24669}, {"age": "25-34 years", "year": 2014, "pop": 323550684, "suicides": 35482}, {"age": "35-54 years", "year": 2014, "pop": 566381838, "suicides": 79195}, {"age": "55-74 years", "year": 2014, "pop": 407528465, "suicides": 58085}, {"age": "75+ years", "year": 2014, "pop": 200442776, "suicides": 25554}, {"age": "15-24 years", "year": 2015, "pop": 480115390, "suicides": 34737}, {"age": "25-34 years", "year": 2015, "pop": 309372012, "suicides": 34789}, {"age": "35-54 years", "year": 2015, "pop": 518890757, "suicides": 71325}, {"age": "55-74 years", "year": 2015, "pop": 418844735, "suicides": 54077}, {"age": "75+ years", "year": 2015, "pop": 179527863, "suicides": 24314}];
+  var all = [{"year": 1985, "pop": 1008600086, "suicides": 116063}, {"year": 1986, "pop": 1029909613, "suicides": 120670}, {"year": 1987, "pop": 1095029726, "suicides": 126842}, {"year": 1988, "pop": 1054094424, "suicides": 121026}, {"year": 1989, "pop": 1225514347, "suicides": 160244}, {"year": 1990, "pop": 1466620100, "suicides": 193361}, {"year": 1991, "pop": 1489988384, "suicides": 198020}, {"year": 1992, "pop": 1569539447, "suicides": 211473}, {"year": 1993, "pop": 1530416654, "suicides": 221565}, {"year": 1994, "pop": 1548749372, "suicides": 232063}, {"year": 1995, "pop": 1591559103, "suicides": 243544}, {"year": 1996, "pop": 1662267662, "suicides": 246725}, {"year": 1997, "pop": 1702991519, "suicides": 240745}, {"year": 1998, "pop": 1725181351, "suicides": 249591}, {"year": 1999, "pop": 1776363155, "suicides": 256119}, {"year": 2000, "pop": 1799227908, "suicides": 255832}, {"year": 2001, "pop": 1755565489, "suicides": 250652}, {"year": 2002, "pop": 1822152815, "suicides": 256095}, {"year": 2003, "pop": 1838458020, "suicides": 256079}, {"year": 2004, "pop": 1745246613, "suicides": 240861}, {"year": 2005, "pop": 1734909645, "suicides": 234375}, {"year": 2006, "pop": 1840908837, "suicides": 233361}, {"year": 2007, "pop": 1859564353, "suicides": 233408}, {"year": 2008, "pop": 1860620851, "suicides": 235447}, {"year": 2009, "pop": 1976228366, "suicides": 243487}, {"year": 2010, "pop": 1997297329, "suicides": 238702}, {"year": 2011, "pop": 1993362332, "suicides": 236484}, {"year": 2012, "pop": 1912812088, "suicides": 230160}, {"year": 2013, "pop": 1890161710, "suicides": 223199}, {"year": 2014, "pop": 1912057309, "suicides": 222984}, {"year": 2015, "pop": 1906759828, "suicides": 219243}];
+
+  var allMin = Math.min.apply(Math, all.map(function (o) { return o.suicides}));
+  var allMax = Math.max.apply(Math, all.map(function (o) { return o.suicides}));
+  var allArray = [{"data": all, "color": COLOR1, "label": 'All'}];
+
+  var genderMales = byGender.filter(function(obj) { return obj.gender === "male"});
+  var genderFemales = byGender.filter(function(obj) { return obj.gender === "female"});
+  var genderMin = Math.min.apply(Math, byGender.map(function (o) { return o.suicides}));
+  var genderMax = Math.max.apply(Math, byGender.map(function (o) { return o.suicides}));
+  var genderArray = [
+    {"data": genderMales, "color": COLOR2, "label": "Males"},
+    {"data": genderFemales, "color": COLOR3, "label": "Females"}];
+
+  var age15to24 = byAgeBracket.filter(function(obj) { return obj.age === "15-24 years" });
+  var age25to34 = byAgeBracket.filter(function(obj) { return obj.age === "25-34 years" });
+  var age35to54 = byAgeBracket.filter(function(obj) { return obj.age === "35-54 years" });
+  var age55to74 = byAgeBracket.filter(function(obj) { return obj.age === "55-74 years" });
+  var age75plus = byAgeBracket.filter(function(obj) { return obj.age === "75+ years" });
+  var ageMin = Math.min.apply(Math, byAgeBracket.map(function (o) { return o.suicides}));
+  var ageMax = Math.max.apply(Math, byAgeBracket.map(function (o) { return o.suicides}));
+  var ageArray = [
+    {"data": age15to24, "color": COLOR4, "label": "Ages 15-24"},
+    {"data": age25to34, "color": COLOR5, "label": "Ages 25-34"},
+    {"data": age35to54, "color": COLOR6, "label": "Ages 35-54"},
+    {"data": age55to74, "color": COLOR7, "label": "Ages 55-74"},
+    {"data": age75plus, "color": COLOR1, "label": "Ages 75+"}];
+
+  var genX = byGeneration.filter(function(obj) { return obj.gen === "Generation X" });
+  var genSilent = byGeneration.filter(function(obj) { return obj.gen === "Silent" });
+  var genGI = byGeneration.filter(function(obj) { return obj.gen === "G.I. Generation" });
+  var genBoomers = byGeneration.filter(function(obj) { return obj.gen === "Boomers" });
+  var genZ = byGeneration.filter(function(obj) { return obj.gen === "Generation Z" });
+  var genMillenials = byGeneration.filter(function(obj) { return obj.gen === "Millenials" });
+  var genMin = Math.min.apply(Math, byGeneration.map(function (o) { return o.suicides}));
+  var genMax = Math.max.apply(Math, byGeneration.map(function (o) { return o.suicides}));
+  var genArray = [
+    {"data": genX, "color": COLOR2, "label": "Generation X"},
+    {"data": genSilent, "color": COLOR3, "label": "Silent Generation"},
+    {"data": genGI, "color": COLOR4, "label": "G.I. Generation"},
+    {"data": genBoomers, "color": COLOR5, "label": "Baby Boomers"},
+    {"data": genMillenials, "color": COLOR6, "label": "Millenials"},
+    {"data": genZ, "color": COLOR7, "label": "Generation Z"}];
+
+  var conAfrica = byContinent.filter(function(obj) { return obj.continent === "Africa"});
+  var conAsia = byContinent.filter(function(obj) { return obj.continent === "Asia"});
+  var conEurope = byContinent.filter(function(obj) { return obj.continent === "Europe"});
+  var conNA = byContinent.filter(function(obj) { return obj.continent === "North America" });
+  var conOceania = byContinent.filter(function(obj) { return obj.continent === "Oceania" });
+  var conSA = byContinent.filter(function(obj) { return obj.continent === "South America" });
+  var conMin = Math.min.apply(Math, byContinent.map(function (o) { return o.suicides}));
+  var conMax = Math.max.apply(Math, byContinent.map(function (o) { return o.suicides}));
+  var conArray = [
+    {"data": conAfrica, "color": COLOR1, "label": "Africa"},
+    {"data": conAsia, "color": COLOR2, "label": "Asia"},
+    {"data": conEurope, "color": COLOR3, "label": "Europe"},
+    {"data": conNA, "color": COLOR4, "label": "North America"},
+    {"data": conOceania, "color": COLOR5, "label": "Oceania"},
+    {"data": conSA, "color": COLOR6, "label": "South America"}];
+
+  main("all");
+
+  function main(option) {
+    if(option.type !== "resize") {
+      viewType = option;
+    }
+
+    var graphDiv = document.getElementById("graph");
+
+    var MARGIN = {top: 20, right: 50, bottom: 50, left: 90},
+      WIDTH = graphDiv.clientWidth - MARGIN.left - MARGIN.right,
+      HEIGHT = graphDiv.clientHeight - MARGIN.top - MARGIN.bottom;
+
+    // remove previous table and graph
+    d3.select('#graph').selectAll('svg').remove();
+    d3.select('#legend').selectAll('svg').remove();
+
+
+    var xScale = d3.scaleLinear()
+                   .domain([1985, 2016])
+                   .range([0, WIDTH]);
+
+    switch(viewType) {
+      case "all":
+        yScale = d3.scaleLinear().domain([allMin, allMax+10000]).range([HEIGHT,0]);
+        viewData = allArray;
+        break;
+      case "gender":
+        yScale = d3.scaleLinear().domain([genderMin, genderMax+10000]).range([HEIGHT,0]);
+        viewData = genderArray;
+        break;
+      case "age":
+        yScale = d3.scaleLinear().domain([ageMin, ageMax+10000]).range([HEIGHT,0]);
+        viewData = ageArray;
+        break;
+      case "generation":
+        yScale = d3.scaleLinear().domain([genMin, genMax+10000]).range([HEIGHT,0]);
+        viewData = genArray;
+        break;
+      case "continent":
+        yScale = d3.scaleLinear().domain([conMin, conMax+10000]).range([HEIGHT,0]);
+        viewData = conArray;
+        break;
+    }
+
+    //#4 - Build a svg-based scatterplot based on the random, count data generated in [1].
+    // base svg
+    var canvas = d3.select('#graph')
+                   .append('svg')
+                   .attr('width', WIDTH + MARGIN.left + MARGIN.right)
+                   .attr('height', HEIGHT  + MARGIN.top + MARGIN.bottom)
+                   .attr('class', 'canvas')
+                   .append('g')
+                   .attr("transform",
+                     "translate(" + MARGIN.left + "," + MARGIN.top + ")");
+
+    // x-axis
+    canvas.append("g")
+          .attr("transform", "translate(0," + HEIGHT + ")")
+          .attr('class', 'axis')
+          .call(d3.axisBottom(xScale)
+                  .ticks(20)
+                  .tickFormat(d3.format(".0f")));
+
+    // x-axis label
+    canvas.append("text")
+          .attr("transform",
+            "translate(" + (WIDTH/2) + " ," +
+            (HEIGHT + MARGIN.top + 20) + ")")
+          .attr("class", "axis-label")
+          .text("YEAR");
+
+    // y-axis
+    canvas.append("g")
+          .attr('class', 'axis')
+          .call(d3.axisLeft(yScale));
+
+    // y-axis label
+    canvas.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 0 - MARGIN.left)
+          .attr("x", 0 - (HEIGHT / 2))
+          .attr("dy", "1em")
+          .attr("class", "axis-label")
+          .text("TOTAL SUICIDES");
+
+    // y-axis grid lines
+    canvas.append("g")
+          .attr("class", "grid")
+          .call(d3.axisLeft(yScale)
+                  .tickSize(-WIDTH)
+                  .tickFormat(""));
+
+    var div = d3.select('#graph')
+                .append('div')
+                .attr('class', 'tooltip');
+
+    var allLine = d3.line()
+                    .x(function (d) {
+                      return xScale(d.year);
+                    })
+                    .y( function (d) {
+                      return yScale(d.suicides);
+                    });
+
+    var labels = [];
+    var colors = [];
+    // !!!Main loop that draw line and plot for each data object by type!!!
+    viewData.forEach(function(suicideGroup, i) {
+      // draw plot points
+      canvas.selectAll('circle.g' + i)
+            .data(suicideGroup.data)
+            .enter()
+            .append('circle')
+            .attr('r', 7)
+            .attr('cx', function (d) {
+              return xScale(d.year);
+            })
+            .attr('cy', function (d) {
+              return yScale(d.suicides);
+            })
+            .attr('fill', function (d) {
+              return suicideGroup.color;
+            })
+            .attr('class', 'plot')
+            .on("mouseover", function (d) {
+              div.transition()
+                 .style("opacity", .9);
+              div.html('<b>' + suicideGroup.label + '</b><br/>' +
+                              '<b>Year:</b> ' + d.year + '<br/>' +
+                              '<b>Suicides:</b> ' + (d.suicides).toLocaleString('en'))
+                 .style("left", (d3.event.pageX) + "px")
+                 .style("top", (d3.event.pageY) + "px");
+            })
+            .on("mouseout", function (d) {
+              div.transition()
+                 .style("opacity", 0);
+            });
+
+      canvas.append("path")
+            .attr("d", allLine(suicideGroup.data))
+            .attr("fill", "none")
+            .attr("stroke", suicideGroup.color)
+            .attr("stroke-width", 2);
+
+      labels.push(suicideGroup.label);
+      colors.push(suicideGroup.color);
+    });
+
+    var legend = d3.select('#legend')
+                   .append('svg');
+
+    legend.selectAll("mydots")
+          .data(colors)
+          .enter()
+          .append("circle")
+          .attr("cx", function(d, i)  {
+            return 100 + i*170;  // 100 is where the first dot appears. 25 is the distance between dots
+          })
+          .attr("cy", 40)
+          .attr("r", 7)
+          .style("fill", function(d) {
+            return d;
+          });
+    legend.selectAll("mylabels")
+          .data(labels)
+          .enter()
+          .append("text")
+          .attr("x", function(d, i)  {
+            return 120 + i*170;  // 100 is where the first dot appears. 25 is the distance between dots
+          })
+          .attr("y", 40) // 100 is where the first dot appears. 25 is the distance between dots
+          .style("fill", function(d, i) {
+            return colors[i];
+          })
+          .text(function(d) {
+            return d;
+          })
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle");
+  }
+
+
+  window.addEventListener("resize", main);
+  document.getElementById("defaultOpen").click();
+
 </script>
 
-</body>
 </html>
