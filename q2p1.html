@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Global Suicides Interactive Tool (1985-2015)</title>
+  <title>Global Suicides Interactive Tool (Q2P1)</title>
   <style type="text/css">
     @import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
     html {
@@ -171,6 +171,33 @@
   </style>
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.21.0/d3-legend.min.js"></script>
+  <script>
+
+    var viewArray = [
+      {"key": 'gender', "label": 'BY GENDER'},
+      {"key": 'age', "label": 'BY AGE BRACKET'},
+      {"key": 'generation', "label": 'BY GENERATION'},
+      {"key": 'continent', "label": 'BY CONTINENT'},
+    ];
+
+    viewArray = shuffleArray(viewArray);
+    function shuffleArray(array) {
+      var currentIndex = array.length, temporaryValue, randomIndex;
+
+      while (0 !== currentIndex) {
+
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+      return array;
+    }
+
+    console.log(viewArray);
+  </script>
 </head>
 
 <body>
@@ -198,17 +225,19 @@
 <div id="nav">
   <div class="tabs">
     <button class="tablinks" onclick="changeView(event, 'all')" id="defaultOpen">ALL</button>
-    <button class="tablinks" onclick="changeView(event, 'gender')">BY GENDER</button>
-    <button class="tablinks" onclick="changeView(event, 'age')">BY AGE BRACKET</button>
-    <button class="tablinks" onclick="changeView(event, 'generation')">BY GENERATION</button>
-    <button class="tablinks" onclick="changeView(event, 'continent')">BY CONTINENT</button>
+    <button class="tablinks" onclick="changeView(event, viewArray[0].key)"><script>document.write(viewArray[0].label);</script></button>
+    <button class="tablinks" onclick="changeView(event, viewArray[1].key)"><script>document.write(viewArray[1].label);</script></button>
+    <button class="tablinks" onclick="changeView(event, viewArray[2].key)"><script>document.write(viewArray[2].label);</script></button>
+    <button class="tablinks" onclick="changeView(event, viewArray[3].key)"><script>document.write(viewArray[3].label);</script></button>
   </div>
-</div>  
+</div>
 
 <div id="legend"></div>
 <div id="graph"></div>
 </body>
 <script>
+
+
   function changeView(evt, viewOption) {
     // Declare all variables
     var i, tabcontent, tablinks;
